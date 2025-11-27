@@ -11,7 +11,8 @@ private:
 
 protected:
   constexpr static Data::Val None = 0; // 无数据
-  std::shared_ptr<std::atomic<bool>> stop_ = std::make_shared<std::atomic<bool>>(false);
+  std::shared_ptr<std::atomic<bool>> stop_ =
+      std::make_shared<std::atomic<bool>>(false);
   std::string key_;
 
   inline Data::Val get_in() { return *p_in_; }
@@ -32,4 +33,7 @@ public:
   void callback(int msg) { static_cast<Derived *>(this)->callback(msg); }
   void run() { static_cast<Derived *>(this)->run(); }
   void stop() { *stop_ = true; }
+  std::shared_ptr<Derived> get_shared_ptr() {
+    return std::make_shared<Derived>(static_cast<Derived const &>(*this));
+  }
 };

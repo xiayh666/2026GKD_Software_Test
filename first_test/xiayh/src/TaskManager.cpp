@@ -1,11 +1,12 @@
-#include "common.hpp"
 #include "tasks/TaskManager.hpp"
+#include "common.hpp"
 #include "tasks/DelayBufferTask.hpp"
 #include <chrono>
 #include <format>
 #include <memory>
 #include <string>
 #include <thread>
+#include <type_traits>
 
 using namespace std::chrono_literals;
 
@@ -25,29 +26,17 @@ void TaskManager::output_task() {
         *buffers[0].p_data = 0;
         logger->log(std::format("output: {}", std::to_string(v)));
       }
-      std::this_thread::sleep_for(1ms);
+      std::this_thread::sleep_for(50us);
     }
   }).detach();
 }
 
 void TaskManager::pop() {
+  if (buffers.size() <= 1)
+    return;
   std::string key = buffers.back().key;
   logger->log(key);
-  if (buffers.back().type == Filter) {
-    logger->log("Filter");
-    auto task = get_task<FilterTask>(key); 
-    task.stop();
-  }else if (buffers.back().type == Gain) {
-    logger->log("Gain");
-    auto task = get_task<GainTask>(key);
-    task.stop();
-  } else if (buffers.back().type == Delay) {
-    logger->log("Delay");
-    auto task = get_task<DelayBufferTask>(key);
-    task.stop();
-  } else {
-    logger->log("?????");
-  }
+  std::visit([](auto &task) { task->stop(); }, tasks.at(key));
   tasks.erase(key);
   buffers.pop_back();
 }

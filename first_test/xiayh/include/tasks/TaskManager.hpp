@@ -16,44 +16,28 @@ private:
   using Task =
       std::variant<std::shared_ptr<FilterTask>, std::shared_ptr<GainTask>,
                    std::shared_ptr<DelayBufferTask>>;
-  // Data::Ptr out = std::make_shared<std::atomic<Data::Val>>(0);
   std::map<std::string, Task> tasks;
   struct Buffer {
     Data::Ptr p_data;
     std::string key;
-    TaskType type;
-    Buffer(std::string key, Data::Ptr p_data, TaskType type) {
+    Buffer(std::string key, Data::Ptr p_data) {
       this->p_data = p_data;
       this->key = std::move(key);
-      this->type = type;
     }
   };
   std::vector<Buffer> buffers;
 
 public:
-  // std::vector<std::unique_ptr<std::pair<std::string, Task>>> tasks;
   TaskManager() {
-    buffers.emplace_back("", std::make_shared<std::atomic<Data::Val>>(0),
-                         TaskType::Other);
+    buffers.emplace_back("", std::make_shared<std::atomic<Data::Val>>(0));
   }
 
   template <typename T> void add_task(std::string key) {
-    if constexpr (std::is_same_v<T, FilterTask>) {
-      buffers.emplace_back(key, std::make_shared<std::atomic<Data::Val>>(0),
-                           TaskType::Filter);
-    } else if constexpr (std::is_same_v<T, GainTask>) {
-      buffers.emplace_back(key, std::make_shared<std::atomic<Data::Val>>(0),
-                           TaskType::Gain);
-    } else if constexpr (std::is_same_v<T, DelayBufferTask>) {
-      buffers.emplace_back(key, std::make_shared<std::atomic<Data::Val>>(0),
-                           TaskType::Gain);
-    }
+    buffers.emplace_back(key, std::make_shared<std::atomic<Data::Val>>(0));
+
     auto task = std::make_shared<T>(key, buffers.back().p_data,
                                     buffers.at(buffers.size() - 2).p_data);
     task->run();
-    // tasks.push_back(
-    //     std::make_unique<std::pair<std::string, Task>>(key,
-    //     std::move(task)));
     tasks.emplace(key, std::move(task));
   }
 

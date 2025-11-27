@@ -16,12 +16,11 @@ void GainTask::run() {
     while (true) {
       if (*stop_) {
         std::cout << "Gt stop" << std::endl;
-
         return;
       }
       Data::Val v;
       if ((v = take_in()) != None) {
-        Data::Val res = v * k;
+        Data::Val res = v * (*k);
         set_out(res);
         logger->log(std::format("write Gain-{}: {}", key_, res));
       }
@@ -30,4 +29,4 @@ void GainTask::run() {
   }).detach();
 }
 
-void GainTask::callback(int msg) { k = msg; }
+void GainTask::callback(int msg) { *k = msg; }
